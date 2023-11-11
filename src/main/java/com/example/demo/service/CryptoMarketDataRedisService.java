@@ -18,9 +18,10 @@ public class CryptoMarketDataRedisService {
   @Autowired
   private RedisTemplate<String, List<CryptoMarketData>> redisTemplate;
 
-  @PostConstruct
+  /**
+  * Load the recent market data to Redis from Database
+  */
   public void loadAllRecentData() {
-
     List<String> allCryptoDataNames = cryptoMarketDataRepository.findDistinctNames();
     for(String name : allCryptoDataNames){
       List<CryptoMarketData> marketDataList = cryptoMarketDataRepository.findAllByNameOrderByDateDesc(name);
