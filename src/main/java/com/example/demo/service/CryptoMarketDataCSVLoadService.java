@@ -10,7 +10,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
@@ -20,7 +19,7 @@ import java.util.List;
 
 @AllArgsConstructor
 @Service
-public class CryptoMarketDataLoader {
+public class CryptoMarketDataCSVLoadService {
 
   private ResourceLoader resourceLoader;
   public List<CryptoMarketData> loadCryptoMarketData() throws IOException {
