@@ -3,6 +3,8 @@ package com.example.demo.component;
 import com.example.demo.entity.CryptoMarketData;
 import com.example.demo.repository.CryptoMarketDataRepository;
 import com.example.demo.service.CryptoMarketDataCSVLoadService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,28 +24,41 @@ public class DataLoaderRunner implements CommandLineRunner {
   private final CryptoMarketDataRepository cryptoMarketDataRepository;
 
   @Autowired
-  private RedisTemplate<String, List<CryptoMarketData>> redisTemplate;
+  private RedisTemplate<String, String> redisTemplate;
+
+  @Autowired
+  private ObjectMapper objectMapper;
 
 
+  /* Load Data to the Database and Redis only when database is empty
+  * */
   @Override
   @Transactional
   public void run(String... args) throws Exception {
-    List<CryptoMarketData> marketDataList = cryptoMarketDataCSVLoadService.loadCryptoMarketData();
+    if(cryptoMarketDataRepository.count() == 0){
+      List<CryptoMarketData> marketDataList = cryptoMarketDataCSVLoadService.loadCryptoMarketData();
+      //Add Data to Database
+      cryptoMarketDataRepository.saveAll(marketDataList);
+      //Add Most Recent Data to Redis
+      processAndAddDataToRedis(marketDataList);
+    }
+  }
 
-    //Add Data to Database
-    cryptoMarketDataRepository.saveAll(marketDataList);
-
-    //Add Most Recent Data to Redis
+  private void processAndAddDataToRedis(List<CryptoMarketData> marketDataList) {
     Map<String, List<CryptoMarketData>> groupedData = marketDataList.stream()
         .collect(Collectors.groupingBy(CryptoMarketData::getName));
 
     groupedData.forEach((name, list) -> {
       List<CryptoMarketData> recentMarketData = list.stream()
           .sorted(Comparator.comparing(CryptoMarketData::getDate).reversed())
-          .limit(7)
+          .limit(30)
           .toList();
-      redisTemplate.opsForValue().set(name, recentMarketData);
+      try{
+        String jsonData = objectMapper.writeValueAsString(recentMarketData);
+        redisTemplate.opsForValue().set(name, jsonData);
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
+      }
     });
-
   }
 }

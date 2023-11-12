@@ -1,5 +1,8 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvDate;
 import jakarta.persistence.*;
@@ -7,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -17,7 +21,7 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @Entity
 @Table( name = "crypto_market_data")
-public class CryptoMarketData {
+public class CryptoMarketData implements Serializable {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
